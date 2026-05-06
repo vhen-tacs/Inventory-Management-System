@@ -1,22 +1,18 @@
 import sys
 import sqlite3
-from PyQt6.QtWidgets import (QApplication,QWidget,QVBoxLayout,QLineEdit,QComboBox,QPushButton,QLabel,QMessageBox)
-
-#By placing (QWidget) after the class name, PersonnelForm inherits all properties,
-#methods, and signals from QWidget. This means it can be displayed, painted on the screen, and handle user events.
-#maong ayaw kalimot ani vhen.
+from PyQt6.QtWidgets import (QApplication, QWidget, QVBoxLayout, QLineEdit, QComboBox, QPushButton, QLabel, QMessageBox)
 
 class PersonnelForm(QWidget):
-    def __init__(self):
+    def __init__(self, personnel_data=None):
         super().__init__()
-        self.setWindowTitle("DPWH Personnel Entry")
+        self.personnel_data = personnel_data 
+        self.setWindowTitle("DPWH Personnel Entry" if not personnel_data else "Edit Personnel")
         self.setFixedWidth(400)
         self.init_ui()
 
     def init_ui(self):
         layout = QVBoxLayout()
 
-        # Input Fields
         self.emp_id = QLineEdit(placeholderText="Employee ID (e.g., DVO-001)")
         self.last_name = QLineEdit(placeholderText="Last Name")
         self.first_name = QLineEdit(placeholderText="First Name")
@@ -25,17 +21,24 @@ class PersonnelForm(QWidget):
         self.division = QLineEdit(placeholderText="Division")
         self.position_title = QLineEdit(placeholderText= "Position Title")
         self.remarks = QLineEdit(placeholderText="Remarks")
-
         
-        # Dropdown for Status (Enforces your CHECK constraint)
         self.status = QComboBox()
         self.status.addItems(["BUDGETARY", "COS"])
 
-        # Save Button
-        save_btn = QPushButton("Save to Database")
+        if self.personnel_data:
+            self.emp_id.setText(self.personnel_data[1])
+            self.first_name.setText(self.personnel_data[2])
+            self.middle_name.setText(self.personnel_data[3])
+            self.last_name.setText(self.personnel_data[4])
+            self.name_extension.setText(self.personnel_data[5])
+            self.division.setText(self.personnel_data[6])
+            self.position_title.setText(self.personnel_data[7])
+            self.status.setCurrentText(self.personnel_data[8])
+            self.remarks.setText(self.personnel_data[9])
+
+        save_btn = QPushButton("Save to Database" if not self.personnel_data else "Update Record")
         save_btn.clicked.connect(self.save_data)
 
-        # Adding to Layout
         layout.addWidget(QLabel("Employee ID:"))
         layout.addWidget(self.emp_id)
         layout.addWidget(QLabel("First Name:"))
@@ -59,7 +62,6 @@ class PersonnelForm(QWidget):
         self.setLayout(layout)
 
     def save_data(self):
-        # 1. Get data from the form
         e_id = self.emp_id.text()
         fn = self.first_name.text()
         mn = self.middle_name.text()
@@ -70,30 +72,40 @@ class PersonnelForm(QWidget):
         st = self.status.currentText()
         rm = self.remarks.text()
    
-
-
-        # 2. Database Logic
         try:
             db = sqlite3.connect('list_hrms.db')
             cursor = db.cursor()
             
-            # Note: We must include 'division' etc. even if empty for now
-            cursor.execute('''
-                INSERT INTO personnel (emp_id, last_name, first_name, middle_name, name_extension, division, position_title, employment_status, remarks)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (e_id, ln, fn, mn, ext_n, div, pos_title, st, rm))
+            if self.personnel_data:
+                cursor.execute('''
+                    UPDATE personnel SET emp_id=?, last_name=?, first_name=?, middle_name=?, name_extension=?, division=?, position_title=?, employment_status=?, remarks=? WHERE id=?
+                ''', (e_id, ln, fn, mn, ext_n, div, pos_title, st, rm, self.personnel_data[0]))
+                QMessageBox.information(self, "Success", "Personnel updated successfully!")
+            else:
+                cursor.execute('''
+                    INSERT INTO personnel (emp_id, last_name, first_name, middle_name, name_extension, division, position_title, employment_status, remarks)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (e_id, ln, fn, mn, ext_n, div, pos_title, st, rm))
+                QMessageBox.information(self, "Success", "Personnel added successfully!")
             
             db.commit()
             db.close()
-            QMessageBox.information(self, "Success", "Personnel added successfully!")
             
         except sqlite3.IntegrityError:
             QMessageBox.warning(self, "Error", "Duplicate Employee ID found!")
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Failed: {str(e)}")
 
-# Standard PyQt6 execution
-app = QApplication(sys.argv)
-window = PersonnelForm()
-window.show()
-sys.exit(app.exec())
+        finally:
+            # THIS GUARANTEES THE DATABASE UNLOCKS
+            if db:
+                db.close()
+
+if __name__ == "__main__":
+    if not QApplication.instance():
+        app = QApplication(sys.argv)
+    else:
+        app = QApplication.instance()
+    window = PersonnelForm()
+    window.show()
+    sys.exit(app.exec())
