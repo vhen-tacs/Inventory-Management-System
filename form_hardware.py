@@ -1,6 +1,6 @@
 import sys
 import sqlite3
-from PyQt6.QtWidgets import (QApplication, QWidget, QVBoxLayout, QLineEdit, QComboBox, QPushButton, QLabel, QMessageBox)
+from PyQt6.QtWidgets import (QApplication, QWidget, QVBoxLayout, QLineEdit, QComboBox, QPushButton, QLabel, QMessageBox, QGridLayout)
 
 class HardwareForm(QWidget):
     def __init__(self, hardware_data=None):
@@ -58,23 +58,23 @@ class HardwareForm(QWidget):
         # Save Button
         save_btn = QPushButton("Save to Database" if not self.hardware_data else "Update Record")
         save_btn.clicked.connect(self.save_data)
-
+        layout= QGridLayout()
         # Adding to Layout
-        layout.addWidget(QLabel("Hardware Type:"))
-        layout.addWidget(self.hardware_type)
-        layout.addWidget(QLabel("Hardware ID:"))
-        layout.addWidget(self.hw_id)
-        layout.addWidget(QLabel("Serial Number:"))
+        layout.addWidget(QLabel("Hardware Type:"), 0,0)
+        layout.addWidget(self.hardware_type, 0,1)
+        layout.addWidget(QLabel("Hardware ID:"), 1,0)
+        layout.addWidget(self.hw_id, 1,1)
+        layout.addWidget(QLabel("Serial Number:"), 2,0)
         layout.addWidget(self.serial_number)
-        layout.addWidget(QLabel("Brand Name:"))
+        layout.addWidget(QLabel("Brand Name:"), 3,0)
         layout.addWidget(self.brand_name)
-        layout.addWidget(QLabel("Model Name:"))
+        layout.addWidget(QLabel("Model Name:"), 4,0)
         layout.addWidget(self.model_name)
-        layout.addWidget(QLabel("Processor Details:"))
+        layout.addWidget(QLabel("Processor Details:"), 5,0)
         layout.addWidget(self.processor_details)
-        layout.addWidget(QLabel("RAM:"))
+        layout.addWidget(QLabel("RAM:"), 6,0)
         layout.addWidget(self.ram)
-        layout.addWidget(QLabel("Storage:"))
+        layout.addWidget(QLabel("Storage:"), 7,0)
         layout.addWidget(self.storage)
         layout.addWidget(QLabel("OS Version:"))
         layout.addWidget(self.os_ver)
