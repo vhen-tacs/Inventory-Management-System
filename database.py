@@ -3,7 +3,6 @@ import sqlite3
 DB_FILE = 'list_hrms.db'
 
 def init_db():
-    """Safely upgrades the database to support Soft Deletes and Logging."""
     db = sqlite3.connect(DB_FILE)
     cursor = db.cursor()
     
@@ -31,7 +30,6 @@ def init_db():
     db.close()
 
 def log_action(module, action, details):
-    """Saves an action to the system logs."""
     db = sqlite3.connect(DB_FILE)
     cursor = db.cursor()
     cursor.execute("INSERT INTO system_logs (module, action, details) VALUES (?, ?, ?)", (module, action, details))
@@ -39,7 +37,6 @@ def log_action(module, action, details):
     db.close()
 
 def get_logs(module):
-    """Fetches logs for a specific module."""
     db = sqlite3.connect(DB_FILE)
     cursor = db.cursor()
     cursor.execute("SELECT timestamp, action, details FROM system_logs WHERE module = ? ORDER BY id DESC", (module,))
@@ -82,23 +79,20 @@ def get_all_hardware():
     return data
 
 def delete_personnel(record_id, reference_name=""):
-    """Fetches ALL details, performs the Soft Delete, and logs the full data."""
     db = sqlite3.connect(DB_FILE)
     db.row_factory = sqlite3.Row # This allows us to grab the column names
     cursor = db.cursor()
     
-    # 1. Fetch the entire record BEFORE we hide it
     cursor.execute("SELECT * FROM personnel WHERE id=?", (record_id,))
     row = cursor.fetchone()
     
     if row:
-        # Loop through every column, ignore blanks, and format it cleanly
         details_list = [f"{k.replace('_', ' ').title()}: {row[k]}" for k in row.keys() if k not in ('id', 'is_active') and row[k]]
         full_details_str = " | ".join(details_list)
     else:
         full_details_str = f"Removed Employee ID: {reference_name}"
 
-    # 2. Hide the record
+    
     cursor.execute("UPDATE personnel SET is_active = 0 WHERE id=?", (record_id,))
     db.commit()
     db.close()
@@ -107,26 +101,23 @@ def delete_personnel(record_id, reference_name=""):
     log_action("Personnel", "Deleted", full_details_str)
 
 def delete_hardware(record_id, reference_name=""):
-    """Fetches ALL details, performs the Soft Delete, and logs the full data."""
     db = sqlite3.connect(DB_FILE)
     db.row_factory = sqlite3.Row 
     cursor = db.cursor()
     
-    # 1. Fetch the entire record BEFORE we hide it
     cursor.execute("SELECT * FROM hardware_list WHERE id=?", (record_id,))
     row = cursor.fetchone()
     
     if row:
-        # Loop through every column, ignore blanks, and format it cleanly
         details_list = [f"{k.replace('_', ' ').title()}: {row[k]}" for k in row.keys() if k not in ('id', 'is_active') and row[k]]
         full_details_str = " | ".join(details_list)
     else:
         full_details_str = f"Removed Hardware: {reference_name}"
 
-    # 2. Hide the record
+    
     cursor.execute("UPDATE hardware_list SET is_active = 0 WHERE id=?", (record_id,))
     db.commit()
     db.close()
     
-    # 3. Log the full string
+  
     log_action("Hardware", "Deleted", full_details_str)
