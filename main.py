@@ -10,7 +10,7 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor
 
 class LogsDialog(QDialog):
-    """A professional popup window to display the Audit Trail."""
+    """logs for Audit trail"""
     def __init__(self, module_name):
         super().__init__()
         self.setWindowTitle(f"Audit Trail: {module_name} Logs")
@@ -26,7 +26,7 @@ class LogsDialog(QDialog):
         self.table.setColumnCount(3)
         self.table.setHorizontalHeaderLabels(["Timestamp", "Action", "Full Details"])
         
-        # Format the columns so 'Details' takes up most of the space
+        # Viewer
         self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
         self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
         self.table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
@@ -42,7 +42,7 @@ class LogsDialog(QDialog):
             for col, val in enumerate(log):
                 self.table.setItem(row, col, QTableWidgetItem(str(val)))
                 
-        # Resize rows to fit the wrapped text perfectly
+        # Resize rows to fit the wrapped text
         self.table.resizeRowsToContents()
 
 class MainWindow(QMainWindow):
